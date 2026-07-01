@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<!--
+  Квиз-диагностика «Настоящая причина твоей боли в спине»
+  Проект: Жизнь без боли · Руслан Атман
+  Один файл: разметка (HTML) + стили (CSS) + логика (JS) внутри.
+  Воронка: холодный трафик → этот квиз (инсайт) → заявка на консультацию.
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Узнай настоящую причину своей боли в спине — за 3 минуты</title>
+
+  <!-- Шрифты: заголовки с засечками (глубина), тело без засечек (ясность) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ===== Палитра бренда ===== */
+    :root {
+      --green-deep: #1f3d34;   /* тёмно-зелёный / изумруд — исцеление */
+      --green:      #2e5d4f;
+      --gold:       #c79a3e;   /* тёплое золото — свет, пробуждение */
+      --gold-soft:  #e6c878;
+      --cream:      #f6f1e7;   /* кремовый фон — чистота */
+      --cream-card: #fffdf8;
+      --ink:        #243029;   /* тёмный текст */
+      --ink-soft:   #5b6660;
+      --line:       #e3dccb;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 50% -10%, #2e5d4f33, transparent 55%),
+        var(--cream);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      line-height: 1.55;
+    }
+
+    h1, h2, .serif { font-family: 'Playfair Display', Georgia, serif; }
+
+    /* ===== Карточка-контейнер, в ней сменяются экраны ===== */
+    .card {
+      width: 100%;
+      max-width: 620px;
+      background: var(--cream-card);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: 0 18px 50px -22px #1f3d3466;
+      padding: 38px 34px 34px;
+      position: relative;
+      overflow: hidden;
+    }
+    /* «луч света через темноту» сверху карточки */
+    .card::before {
+      content: "";
+      position: absolute; inset: 0 0 auto 0; height: 5px;
+      background: linear-gradient(90deg, var(--green), var(--gold), var(--green-soft, var(--green)));
+    }
+
+    /* ===== Экраны: показываем только активный ===== */
+    .screen { display: none; animation: fade .45s ease; }
+    .screen.active { display: block; }
+    @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    /* ===== Интро ===== */
+    .eyebrow {
+      display: inline-block;
+      font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--gold); font-weight: 600; margin-bottom: 16px;
+    }
+    h1 { font-size: clamp(26px, 5vw, 34px); line-height: 1.18; color: var(--green-deep); }
+    .lead { margin-top: 16px; font-size: 17px; color: var(--ink-soft); }
+    .lead b { color: var(--ink); font-weight: 600; }
+
+    .signed { margin-top: 22px; font-size: 14px; color: var(--ink-soft); }
+    .signed b { color: var(--green); }
+
+    .meta { margin-top: 24px; font-size: 14px; color: var(--ink-soft); display: flex; gap: 18px; flex-wrap: wrap; }
+    .meta span { display: inline-flex; align-items: center; gap: 6px; }
+
+    /* ===== Кнопки ===== */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      font-family: inherit; font-size: 17px; font-weight: 600;
+      color: #fff; background: var(--green); border: none; cursor: pointer;
+      padding: 15px 30px; border-radius: 14px; margin-top: 26px;
+      transition: transform .12s ease, background .2s ease;
+      width: 100%;
+    }
+    .btn:hover { background: var(--green-deep); transform: translateY(-1px); }
+    .btn.gold { background: var(--gold); color: #2a2010; }
+    .btn.gold:hover { background: var(--gold-soft); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    /* ===== Прогресс ===== */
+    .progress-wrap { margin-bottom: 26px; }
+    .progress-top {
+      display: flex; justify-content: space-between;
+      font-size: 13px; color: var(--ink-soft); margin-bottom: 8px;
+    }
+    .progress-block { color: var(--gold); font-weight: 600; letter-spacing: .04em; }
+    .progress-bar { height: 7px; background: var(--line); border-radius: 99px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--green), var(--gold)); border-radius: 99px; transition: width .35s ease; }
+
+    /* ===== Вопрос и варианты ===== */
+    .question { font-size: clamp(20px, 4vw, 24px); color: var(--green-deep); margin-bottom: 22px; }
+    .options { display: flex; flex-direction: column; gap: 12px; }
+    .option {
+      text-align: left; font-family: inherit; font-size: 16px; color: var(--ink);
+      background: #fff; border: 1.5px solid var(--line); border-radius: 13px;
+      padding: 15px 18px; cursor: pointer;
+      transition: border-color .15s ease, background .15s ease, transform .1s ease;
+    }
+    .option:hover { border-color: var(--gold); transform: translateX(2px); }
+    .option:active { transform: scale(.99); }
+
+    .back {
+      background: none; border: none; color: var(--ink-soft); font-family: inherit;
+      font-size: 14px; cursor: pointer; margin-top: 20px; padding: 6px 0;
+    }
+    .back:hover { color: var(--green); }
+
+    /* ===== Экран «считаем» ===== */
+    .calc { text-align: center; padding: 30px 0; }
+    .spinner {
+      width: 46px; height: 46px; margin: 0 auto 22px;
+      border: 4px solid var(--line); border-top-color: var(--gold);
+      border-radius: 50%; animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== Результат ===== */
+    .result-badge {
+      display: inline-block; font-size: 14px; font-weight: 600;
+      padding: 7px 16px; border-radius: 99px; margin-bottom: 16px;
+    }
+    .bars { margin: 22px 0; }
+    .bar-row { margin-bottom: 14px; }
+    .bar-label { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; }
+    .bar-label b { color: var(--green-deep); }
+    .bar-track { height: 12px; background: var(--line); border-radius: 99px; overflow: hidden; }
+    .bar-val { height: 100%; border-radius: 99px; width: 0; transition: width .9s cubic-bezier(.2,.8,.2,1); }
+    .bar-val.muscle { background: linear-gradient(90deg, var(--green), #4a8a73); }
+    .bar-val.emo { background: linear-gradient(90deg, var(--gold), var(--gold-soft)); }
+
+    .insight {
+      background: var(--cream); border-left: 4px solid var(--gold);
+      padding: 16px 18px; border-radius: 0 12px 12px 0; margin: 22px 0;
+      font-size: 16px;
+    }
+    .insight b { color: var(--green-deep); }
+    .result p { margin-bottom: 14px; }
+    .open-loop { font-weight: 500; color: var(--green-deep); }
+
+    .safety { font-size: 13px; color: var(--ink-soft); margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+
+    /* ===== Форма ===== */
+    .form-field { margin-bottom: 14px; text-align: left; }
+    .form-field label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: var(--green-deep); }
+    .form-field input {
+      width: 100%; font-family: inherit; font-size: 16px; color: var(--ink);
+      padding: 13px 15px; border: 1.5px solid var(--line); border-radius: 12px; background: #fff;
+    }
+    .form-field input:focus { outline: none; border-color: var(--gold); }
+    .trust { font-size: 13px; color: var(--ink-soft); margin-top: 12px; text-align: center; }
+    .form-error { color: #b4452e; font-size: 14px; margin-top: 10px; display: none; }
+
+    /* ===== Спасибо ===== */
+    .thanks { text-align: center; padding: 20px 0; }
+    .thanks .check {
+      width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 50%;
+      background: var(--green); color: var(--gold-soft);
+      display: flex; align-items: center; justify-content: center; font-size: 32px;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="card">
+
+    <!-- ============ ЭКРАН 1: ИНТРО ============ -->
+    <section class="screen active" id="intro">
+      <span class="eyebrow">Бесплатная диагностика · 3 минуты</span>
+      <h1>Узнай настоящую причину своей боли в спине</h1>
+      <p class="lead">
+        Тебе говорят «это грыжа, терпи или на операцию». Но <b>грыжа есть у миллионов людей,
+        у которых ничего не болит</b>. Значит, причина в другом.
+      </p>
+      <p class="lead">Ответь на 9 вопросов — и увидишь свой персональный расклад: что на самом деле держит твою боль.</p>
+      <p class="signed">— <b>Руслан Атман</b>, сам прошёл через грыжу L5-S1 и восстановился без операции</p>
+      <div class="meta">
+        <span>🕒 3 минуты</span>
+        <span>🔒 Без диагнозов и страшилок</span>
+        <span>💬 9 вопросов</span>
+      </div>
+      <button class="btn" onclick="startQuiz()">Начать диагностику →</button>
+    </section>
+
+    <!-- ============ ЭКРАН 2: ВОПРОСЫ ============ -->
+    <section class="screen" id="quiz">
+      <div class="progress-wrap">
+        <div class="progress-top">
+          <span class="progress-block" id="blockName">Тело</span>
+          <span id="progressText">Вопрос 1 из 9</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+      <h2 class="question" id="questionText"></h2>
+      <div class="options" id="optionsBox"></div>
+      <button class="back" id="backBtn" onclick="prevQuestion()" style="display:none">← Назад</button>
+    </section>
+
+    <!-- ============ ЭКРАН 3: СЧИТАЕМ ============ -->
+    <section class="screen" id="calc">
+      <div class="calc">
+        <div class="spinner"></div>
+        <p class="serif" style="font-size:20px;color:var(--green-deep)">Собираю твой расклад…</p>
+        <p style="color:var(--ink-soft);margin-top:8px">Смотрю на соотношение тела и эмоций</p>
+      </div>
+    </section>
+
+    <!-- ============ ЭКРАН 4: РЕЗУЛЬТАТ ============ -->
+    <section class="screen" id="result">
+      <div id="resultContent"><!-- заполняется из JS --></div>
+      <button class="btn gold" onclick="showForm()">Записаться на консультацию →</button>
+    </section>
+
+    <!-- ============ ЭКРАН 5: ФОРМА ============ -->
+    <section class="screen" id="formScreen">
+      <span class="eyebrow">Последний шаг</span>
+      <h2 class="question">Оставь контакт — Руслан свяжется с тобой</h2>
+      <p style="color:var(--ink-soft);margin-bottom:22px">
+        На консультации разберём <b>именно твою</b> ситуацию: какой мышечный триггер держит боль
+        и какая эмоция её запускает — и составим личный план.
+      </p>
+      <form id="leadForm" onsubmit="return submitLead(event)">
+        <div class="form-field">
+          <label for="name">Как тебя зовут?</label>
+          <input type="text" id="name" name="Имя" placeholder="Имя" required />
+        </div>
+        <div class="form-field">
+          <label for="phone">Телефон для связи</label>
+          <input type="tel" id="phone" name="Телефон" placeholder="+7 ___ ___ __ __" required />
+        </div>
+        <div class="form-field">
+          <label for="email">E-mail для связи</label>
+          <input type="email" id="email" name="E-mail" placeholder="you@example.com" required />
+        </div>
+        <button class="btn" type="submit" id="submitBtn">Отправить заявку</button>
+        <p class="form-error" id="formError">Не удалось отправить. Проверь связь и попробуй ещё раз.</p>
+        <p class="trust">🔒 Никакого спама. Контакт нужен только чтобы связаться по консультации.</p>
+      </form>
+    </section>
+
+    <!-- ============ ЭКРАН 6: СПАСИБО ============ -->
+    <section class="screen" id="thanks">
+      <div class="thanks">
+        <div class="check">✓</div>
+        <h2 class="serif" style="color:var(--green-deep);font-size:26px">Заявка принята</h2>
+        <p style="color:var(--ink-soft);margin-top:14px">
+          Руслан свяжется с тобой в ближайшее время. А пока — помни главное:
+          <b style="color:var(--green)">боль уходит, когда убираешь её настоящую причину, а не глушишь следствие.</b>
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    /* =====================================================================
+       ДАННЫЕ КВИЗА
+       У каждого варианта есть «очки»: emo (эмоции) и body (тело).
+       Плюс некоторые ответы ставят флаги для персонального текста результата.
+       ===================================================================== */
+    const QUESTIONS = [
+      { block: "Тело", q: "Где у тебя болит?",
+        options: [
+          { t: "Поясница", body: 2, emo: 0 },
+          { t: "Поясница и нога (тянет, простреливает)", body: 2, emo: 0, flag: "leg" },
+          { t: "Шея или между лопаток", body: 2, emo: 0 },
+          { t: "В разных местах, «гуляет»", body: 1, emo: 1, flag: "roaming" }
+        ] },
+
+      { block: "Тело", q: "Как давно болит?",
+        options: [
+          { t: "Меньше месяца", body: 1, emo: 0 },
+          { t: "От месяца до полугода", body: 1, emo: 1 },
+          { t: "Больше полугода", body: 1, emo: 2, flag: "long" },
+          { t: "Уже несколько лет", body: 1, emo: 2, flag: "long" }
+        ] },
+
+      { block: "Тело", q: "Когда боль обычно сильнее?",
+        options: [
+          { t: "После физической нагрузки", body: 2, emo: 0 },
+          { t: "После стресса, нервов, ссор", body: 0, emo: 2, flag: "stress" },
+          { t: "По утрам или в покое", body: 2, emo: 0 },
+          { t: "Да всегда примерно одинаково", body: 1, emo: 1 }
+        ] },
+
+      { block: "Тело", q: "Таблетки, уколы, массаж помогают?",
+        options: [
+          { t: "Помогает, но потом боль возвращается", body: 0, emo: 1, flag: "returns" },
+          { t: "Помогает надолго", body: 1, emo: 0 },
+          { t: "Почти не помогает", body: 0, emo: 1, flag: "returns" },
+          { t: "Ещё не пробовал(а)", body: 1, emo: 0 }
+        ] },
+
+      { block: "Тело", q: "На МРТ находили грыжу или протрузию?",
+        options: [
+          { t: "Да, нашли грыжу", body: 1, emo: 0, flag: "hernia" },
+          { t: "Нашли протрузию", body: 1, emo: 0, flag: "hernia" },
+          { t: "Ничего не нашли, а болит", body: 0, emo: 2, flag: "noFinding" },
+          { t: "МРТ ещё не делал(а)", body: 1, emo: 0 }
+        ] },
+
+      { block: "Эмоции", q: "Боль впервые пришла в тяжёлый период жизни? (стресс, потеря, конфликт, переезд)",
+        options: [
+          { t: "Да, точно тогда", body: 0, emo: 2, flag: "stress" },
+          { t: "Примерно в то время", body: 0, emo: 1 },
+          { t: "Нет, связи не вижу", body: 1, emo: 0 },
+          { t: "Не помню", body: 1, emo: 0 }
+        ] },
+
+      { block: "Эмоции", q: "Когда нервничаешь или тревожишься — боль усиливается?",
+        options: [
+          { t: "Да, заметно", body: 0, emo: 2, flag: "stress" },
+          { t: "Немного бывает", body: 0, emo: 1 },
+          { t: "Нет", body: 1, emo: 0 }
+        ] },
+
+      { block: "Эмоции", q: "Что чаще носишь в себе?",
+        options: [
+          { t: "Вину", body: 0, emo: 2, flag: "emotion" },
+          { t: "Обиду", body: 0, emo: 2, flag: "emotion" },
+          { t: "Страх, тревогу", body: 0, emo: 2, flag: "emotion" },
+          { t: "Сдержанный гнев", body: 0, emo: 2, flag: "emotion" },
+          { t: "Ничего такого за собой не замечаю", body: 1, emo: 0 }
+        ] },
+
+      { block: "Убеждения", q: "Сколько способов лечения уже перепробовал(а) без результата?",
+        options: [
+          { t: "1–2", body: 1, emo: 0 },
+          { t: "3–5", body: 0, emo: 1, flag: "tried" },
+          { t: "Больше пяти, перепробовал почти всё", body: 0, emo: 2, flag: "tried" },
+          { t: "Толком ещё ничего", body: 1, emo: 0 }
+        ] }
+    ];
+
+    /* ===== Состояние квиза ===== */
+    let current = 0;                 // индекс текущего вопроса
+    const answers = new Array(QUESTIONS.length).fill(null);
+    let chosenProfile = null;        // запомним профиль для отправки в заявке
+
+    /* ===== Навигация между экранами ===== */
+    function show(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function startQuiz() { current = 0; renderQuestion(); show('quiz'); }
+
+    /* ===== Отрисовка вопроса ===== */
+    function renderQuestion() {
+      const item = QUESTIONS[current];
+      document.getElementById('blockName').textContent = item.block;
+      document.getElementById('progressText').textContent = `Вопрос ${current + 1} из ${QUESTIONS.length}`;
+      document.getElementById('progressFill').style.width = ((current) / QUESTIONS.length * 100) + '%';
+      document.getElementById('questionText').textContent = item.q;
+
+      const box = document.getElementById('optionsBox');
+      box.innerHTML = '';
+      item.options.forEach((opt, i) => {
+        const b = document.createElement('button');
+        b.className = 'option';
+        b.textContent = opt.t;
+        b.onclick = () => choose(i);
+        box.appendChild(b);
+      });
+
+      document.getElementById('backBtn').style.display = current > 0 ? 'block' : 'none';
+    }
+
+    /* ===== Выбор ответа ===== */
+    function choose(optionIndex) {
+      answers[current] = QUESTIONS[current].options[optionIndex];
+      if (current < QUESTIONS.length - 1) {
+        current++;
+        renderQuestion();
+      } else {
+        document.getElementById('progressFill').style.width = '100%';
+        finish();
+      }
+    }
+
+    function prevQuestion() {
+      if (current > 0) { current--; renderQuestion(); }
+    }
+
+    /* ===== Подсчёт и переход к результату ===== */
+    function finish() {
+      show('calc');
+      setTimeout(buildResult, 1900); // короткая пауза «считаем» — усиливает ценность
+    }
+
+    function buildResult() {
+      // Считаем очки и собираем флаги
+      let emo = 0, body = 4; // body со стартовой базой — тело участвует всегда
+      const flags = {};
+      answers.forEach(a => {
+        if (!a) return;
+        emo += a.emo; body += a.body;
+        if (a.flag) flags[a.flag] = true;
+      });
+
+      // Доля эмоций в общей картине
+      let emoPct = Math.round(emo / (emo + body) * 100);
+      emoPct = Math.max(15, Math.min(70, emoPct)); // держим в правдоподобных рамках
+      const musclePct = 100 - emoPct;
+
+      // Профиль по доле эмоций
+      let profile;
+      if (emoPct < 30)      profile = { key: 'green',  emoji: '🟢', name: 'Мышечный зажим',  color: '#2e5d4f', bg: '#e3efe8' };
+      else if (emoPct < 50) profile = { key: 'yellow', emoji: '🟡', name: 'Тело + эмоции',   color: '#9a7a1e', bg: '#f7eecd' };
+      else                  profile = { key: 'red',    emoji: '🔴', name: 'Глубокий узел',   color: '#a64a2e', bg: '#f4e0d8' };
+      chosenProfile = profile.name;
+
+      // Персональные предложения по флагам
+      const lines = [];
+      if (flags.hernia && flags.returns)
+        lines.push("У тебя нашли грыжу, и обезболивающее помогает лишь временно. Это важный сигнал: <b>если бы причиной была грыжа, лекарство снимало бы боль навсегда — а она возвращается.</b> Значит, работает спазм мышц вокруг.");
+      else if (flags.hernia)
+        lines.push("Грыжа на снимке есть — но помни: она есть у множества людей без всякой боли. <b>Сама по себе грыжа редко бывает причиной боли.</b> Чаще боль держит спазм окружающих мышц.");
+      else if (flags.noFinding)
+        lines.push("На МРТ ничего не нашли, а боль есть — это почти прямое указание, что <b>дело не в «поломке» позвоночника, а в мышцах и в нервном напряжении.</b>");
+      if (flags.stress)
+        lines.push("Ты отметил(а), что боль связана со стрессом и нервами. Тело хранит напряжение — и поясница часто берёт удар на себя.");
+      if (flags.emotion)
+        lines.push("То, что ты носишь в себе (вина, обида, страх или гнев), — не «лирика»: эти эмоции держат мышцы в постоянном спазме. С этим можно и нужно работать.");
+      if (flags.long)
+        lines.push("Боль длится давно — значит, она закрепилась как привычка тела. Хорошая новость: привычку можно перенастроить.");
+      if (flags.tried)
+        lines.push("Ты уже перепробовал(а) многое без результата. Это логично: почти все методы лечат следствие, а не причину.");
+
+      const profileText = {
+        green:  "По твоим ответам боль у тебя в основном <b>телесная, мышечная</b>. Это хорошая новость: такую боль чаще всего удаётся снять быстрее всего — через работу с триггерными точками и правильные упражнения.",
+        yellow: "У тебя <b>связка тела и эмоций</b>: мышечный зажим подпитывается нервным напряжением. Поэтому одни упражнения или один массаж и не давали стойкого результата — нужно работать с обоими уровнями сразу.",
+        red:    "У тебя <b>глубокий узел</b>: давняя боль плюс сильный эмоциональный фон. Это не приговор — но это объясняет, почему ничего не помогало надолго. Нужна последовательная работа с телом и с корнем в психике."
+      }[profile.key];
+
+      // Собираем HTML результата
+      document.getElementById('resultContent').innerHTML = `
+        <span class="result-badge" style="color:${profile.color};background:${profile.bg}">
+          ${profile.emoji} Твой профиль: ${profile.name}
+        </span>
+        <h2 class="question" style="margin-bottom:8px">Вот что на самом деле держит твою боль</h2>
+
+        <div class="bars">
+          <div class="bar-row">
+            <div class="bar-label"><span>Мышечная причина</span><b>${musclePct}%</b></div>
+            <div class="bar-track"><div class="bar-val muscle" id="barMuscle"></div></div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label"><span>Эмоциональная причина</span><b>${emoPct}%</b></div>
+            <div class="bar-track"><div class="bar-val emo" id="barEmo"></div></div>
+          </div>
+        </div>
+
+        <div class="result">
+          <p>${profileText}</p>
+          ${lines.map(l => `<p>${l}</p>`).join('')}
+        </div>
+
+        <div class="insight">
+          <b>Главное:</b> такую причину убирают без операции, уколов и таблеток —
+          через работу с мышцами и с тем, что их зажимает.
+        </div>
+
+        <p class="open-loop">
+          Но какой именно триггер держит <i>твою</i> боль и какая эмоция её запускает —
+          по тесту видно только направление. Точную точку и личный план разберём за один
+          разбор на консультации.
+        </p>
+
+        <p class="safety">
+          Это не медицинский диагноз, а ориентир по твоим ответам. При острой, резкой боли,
+          онемении, слабости в ноге или потере контроля — сначала покажись врачу.
+        </p>
+      `;
+
+      show('result');
+      // Анимируем полоски после показа экрана
+      requestAnimationFrame(() => {
+        document.getElementById('barMuscle').style.width = musclePct + '%';
+        document.getElementById('barEmo').style.width = emoPct + '%';
+      });
+    }
+
+    function showForm() { show('formScreen'); }
+
+    /* ===== Отправка заявки через FormSubmit (без бэкенда) =====
+       Письмо приходит на nalsur981@gmail.com.
+       ВАЖНО: первое письмо FormSubmit пришлёт со ссылкой активации —
+       нужно один раз нажать её в почте, дальше заявки идут автоматически. */
+    function submitLead(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const err = document.getElementById('formError');
+      err.style.display = 'none';
+      btn.disabled = true; btn.textContent = 'Отправляю…';
+
+      const data = new FormData(document.getElementById('leadForm'));
+      data.append('Профиль по тесту', chosenProfile || '—');
+      data.append('_subject', 'Новая заявка с квиза «Жизнь без боли»');
+      data.append('_captcha', 'false');
+
+      fetch('https://formsubmit.co/ajax/nalsur981@gmail.com', {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' },
+        body: data
+      })
+      .then(r => r.json())
+      .then(() => show('thanks'))
+      .catch(() => {
+        err.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Отправить заявку';
+      });
+
+      return false;
+    }
+  </script>
+</body>
+</html>
