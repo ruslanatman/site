@@ -87,5 +87,17 @@
   </nav>
 </div>
 
+<script>
+(function(){
+  var P='f9o4tZwyUnOe',K='auth_ruslan4990';
+  if(localStorage.getItem(K)===P)return;
+  var o=document.createElement('div');
+  o.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,10,20,0.97);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif';
+  o.innerHTML='<div style="background:#fff;padding:2rem 2rem 1.5rem;border-radius:14px;text-align:center;width:300px;max-width:90%"><h2 style="margin:0 0 .5rem;color:#1a1a2e;font-size:1.25rem">Доступ к материалам</h2><p style="margin:0 0 1rem;color:#666;font-size:.875rem">Введите пароль который вы получили после оплаты</p><input id="pw-in" type="password" placeholder="Пароль" style="width:100%;padding:.75rem;border:2px solid #e0e0e0;border-radius:8px;font-size:1rem;box-sizing:border-box"><p id="pw-err" style="color:#e74c3c;margin:.4rem 0 0;font-size:.85rem;display:none">Неверный пароль</p><button onclick="chkPw()" style="margin-top:.875rem;width:100%;padding:.75rem;background:#2d6a4f;color:#fff;border:none;border-radius:8px;font-size:1rem;cursor:pointer;font-weight:600">Войти →</button></div>';
+  document.body.appendChild(o);
+  document.getElementById('pw-in').addEventListener('keydown',function(e){if(e.key==='Enter')chkPw()});
+  window.chkPw=function(){var v=document.getElementById('pw-in').value;if(v===P){localStorage.setItem(K,P);o.remove()}else{document.getElementById('pw-err').style.display='block'}};
+})();
+</script>
 </body>
 </html>
