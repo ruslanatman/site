@@ -3,7 +3,7 @@
   Квиз-диагностика «Настоящая причина твоей боли в спине»
   Проект: Жизнь без боли · Руслан Атман
   Один файл: разметка (HTML) + стили (CSS) + логика (JS) внутри.
-  Воронка: холодный трафик → этот квиз (инсайт) → заявка на консультацию.
+  Воронка: холодный трафик → бот → этот квиз (инсайт) → лендинг (index.html) → тарифы (part2) → оплата.
 -->
 <html lang="ru">
 <head>
@@ -232,47 +232,9 @@
     <!-- ============ ЭКРАН 4: РЕЗУЛЬТАТ ============ -->
     <section class="screen" id="result">
       <div id="resultContent"><!-- заполняется из JS --></div>
-      <button class="btn gold" onclick="showForm()">Записаться на консультацию →</button>
+      <button class="btn gold" onclick="goToOffer()">Смотри, как убрать именно твою причину →</button>
     </section>
 
-    <!-- ============ ЭКРАН 5: ФОРМА ============ -->
-    <section class="screen" id="formScreen">
-      <span class="eyebrow">Последний шаг</span>
-      <h2 class="question">Оставь контакт — Руслан свяжется с тобой</h2>
-      <p style="color:var(--ink-soft);margin-bottom:22px">
-        На консультации разберём <b>именно твою</b> ситуацию: какой мышечный триггер держит боль
-        и какая эмоция её запускает — и составим личный план.
-      </p>
-      <form id="leadForm" onsubmit="return submitLead(event)">
-        <div class="form-field">
-          <label for="name">Как тебя зовут?</label>
-          <input type="text" id="name" name="Имя" placeholder="Имя" required />
-        </div>
-        <div class="form-field">
-          <label for="phone">Телефон для связи</label>
-          <input type="tel" id="phone" name="Телефон" placeholder="+7 ___ ___ __ __" required />
-        </div>
-        <div class="form-field">
-          <label for="email">E-mail для связи</label>
-          <input type="email" id="email" name="E-mail" placeholder="you@example.com" required />
-        </div>
-        <button class="btn" type="submit" id="submitBtn">Отправить заявку</button>
-        <p class="form-error" id="formError">Не удалось отправить. Проверь связь и попробуй ещё раз.</p>
-        <p class="trust">🔒 Никакого спама. Контакт нужен только чтобы связаться по консультации.</p>
-      </form>
-    </section>
-
-    <!-- ============ ЭКРАН 6: СПАСИБО ============ -->
-    <section class="screen" id="thanks">
-      <div class="thanks">
-        <div class="check">✓</div>
-        <h2 class="serif" style="color:var(--green-deep);font-size:26px">Заявка принята</h2>
-        <p style="color:var(--ink-soft);margin-top:14px">
-          Руслан свяжется с тобой в ближайшее время. А пока — помни главное:
-          <b style="color:var(--green)">боль уходит, когда убираешь её настоящую причину, а не глушишь следствие.</b>
-        </p>
-      </div>
-    </section>
 
   </main>
 
@@ -359,7 +321,8 @@
     /* ===== Состояние квиза ===== */
     let current = 0;                 // индекс текущего вопроса
     const answers = new Array(QUESTIONS.length).fill(null);
-    let chosenProfile = null;        // запомним профиль для отправки в заявке
+    let chosenProfile = null;        // название профиля (для персонализации лендинга)
+    let chosenProfileKey = null;     // ключ профиля: green | yellow | red
 
     /* ===== Навигация между экранами ===== */
     function show(id) {
@@ -434,6 +397,7 @@
       else if (emoPct < 50) profile = { key: 'yellow', emoji: '🟡', name: 'Тело + эмоции',   color: '#9a7a1e', bg: '#f7eecd' };
       else                  profile = { key: 'red',    emoji: '🔴', name: 'Глубокий узел',   color: '#a64a2e', bg: '#f4e0d8' };
       chosenProfile = profile.name;
+      chosenProfileKey = profile.key;   // для передачи на лендинг (?profile=green|yellow|red)
 
       // Персональные предложения по флагам
       const lines = [];
@@ -487,9 +451,9 @@
         </div>
 
         <p class="open-loop">
-          Но какой именно триггер держит <i>твою</i> боль и какая эмоция её запускает —
-          по тесту видно только направление. Точную точку и личный план разберём за один
-          разбор на консультации.
+          По тесту видно только направление. А какой именно триггер держит <i>твою</i> боль
+          и как убрать его по шагам — дома, без операций и таблеток — это уже сам метод.
+          Дальше история Руслана и метод, который эту причину и убирает.
         </p>
 
         <p class="safety">
@@ -506,37 +470,12 @@
       });
     }
 
-    function showForm() { show('formScreen'); }
-
-    /* ===== Отправка заявки через FormSubmit (без бэкенда) =====
-       Письмо приходит на nalsur981@gmail.com.
-       ВАЖНО: первое письмо FormSubmit пришлёт со ссылкой активации —
-       нужно один раз нажать её в почте, дальше заявки идут автоматически. */
-    function submitLead(e) {
-      e.preventDefault();
-      const btn = document.getElementById('submitBtn');
-      const err = document.getElementById('formError');
-      err.style.display = 'none';
-      btn.disabled = true; btn.textContent = 'Отправляю…';
-
-      const data = new FormData(document.getElementById('leadForm'));
-      data.append('Профиль по тесту', chosenProfile || '—');
-      data.append('_subject', 'Новая заявка с квиза «Жизнь без боли»');
-      data.append('_captcha', 'false');
-
-      fetch('https://formsubmit.co/ajax/nalsur981@gmail.com', {
-        method: 'POST',
-        headers: { 'Accept': 'application/json' },
-        body: data
-      })
-      .then(r => r.json())
-      .then(() => show('thanks'))
-      .catch(() => {
-        err.style.display = 'block';
-        btn.disabled = false; btn.textContent = 'Отправить заявку';
-      });
-
-      return false;
+    /* ===== Переход на лендинг с передачей профиля =====
+       Контакт человека уже пойман ботом по кодовому слову, поэтому форму не показываем —
+       ведём сразу на историю Руслана + метод, передавая профиль для персонализации. */
+    function goToOffer() {
+      const key = chosenProfileKey || '';
+      window.location.href = '../index.html' + (key ? '?profile=' + key : '');
     }
   </script>
 </body>

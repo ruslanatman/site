@@ -15,6 +15,10 @@
 <!-- ═══════════════ HERO ═══════════════ -->
 <section id="hero">
   <div class="container">
+    <!-- Плашка-персонализация: видна только при заходе с квиза (?profile=green|yellow|red) -->
+    <div id="quizProfileBanner" style="display:none; margin-bottom:26px; padding:14px 18px; border-radius:14px; background:#181818; border-left:4px solid #d4a855; color:#e8e4d8; font-size:16px; line-height:1.5;">
+      Ты прошёл диагностику. Твой профиль — <b id="quizProfileName" style="color:#d4a855;"></b>. Ниже метод, который убирает именно эту причину.
+    </div>
     <p class="hero-eyebrow">Метод Руслана Атмана · Жизнь без боли</p>
     <h1>
       Как избавиться от боли в пояснице <em>за 2 месяца</em> —<br>
@@ -68,6 +72,12 @@
           позитив и потихоньку возвращаюсь к жизни. Спасибо вам огромное!»
         </blockquote>
       </div>
+    </div>
+
+    <!-- Быстрый выход для тех, кто уже готов и не хочет листать до конца -->
+    <div style="text-align:center; margin-top:36px;">
+      <p style="color:#888880; font-size:14px; margin-bottom:12px;">Уже понял, что дело не в грыже, и не терпится начать?</p>
+      <a href="part2.html" style="display:inline-flex; align-items:center; gap:10px; background:transparent; color:#d4a855; border:2px solid #d4a855; font-size:16px; font-weight:700; padding:14px 30px; border-radius:50px; text-decoration:none;">Перейти к методу →</a>
     </div>
   </div>
 </section>
@@ -478,6 +488,22 @@
     <p style="margin-top:8px;">Не является медицинской консультацией. Перед началом занятий проконсультируйтесь с врачом.</p>
   </div>
 </footer>
+
+<!-- Персонализация из квиза: показываем плашку профиля, если пришли с ?profile= -->
+<script>
+  (function () {
+    var key = new URLSearchParams(location.search).get('profile');
+    var map = {
+      green:  '🟢 Мышечный зажим',
+      yellow: '🟡 Тело + эмоции',
+      red:    '🔴 Глубокий узел'
+    };
+    if (key && map[key]) {
+      document.getElementById('quizProfileName').textContent = map[key];
+      document.getElementById('quizProfileBanner').style.display = 'block';
+    }
+  })();
+</script>
 
 </body>
 </html>
