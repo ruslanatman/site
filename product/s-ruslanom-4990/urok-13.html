@@ -79,14 +79,19 @@
     <div class="cta-box">
       <h2>Давай найдём корень твоей боли</h2>
       <p>Оставь контакт, и я напишу тебе, чтобы договориться о бесплатной онлайн-консультации. На ней мы вместе нащупаем, где сидит твой корень, и наметим, как его убрать.</p>
-      <form class="lead-form" action="mailto:nalsur981@gmail.com" method="post" enctype="text/plain">
+      <form class="lead-form" id="consultForm">
         <label>Имя
           <input type="text" name="Имя" placeholder="Как тебя зовут" required>
         </label>
         <label>Ник в Telegram или email
           <input type="text" name="Контакт (Telegram или email)" placeholder="@username или you@mail.ru" required>
         </label>
-        <button type="submit" class="btn">Отправить</button>
+        <input type="hidden" name="_subject" value="Заявка на консультацию (урок 13 · тариф С Русланом)">
+        <input type="hidden" name="_captcha" value="false">
+        <input type="hidden" name="Источник" value="Урок 13 · тариф С Русланом 4990">
+        <button type="submit" class="btn" id="consultBtn">Отправить</button>
+        <p id="consultOk" style="display:none;margin-top:14px;color:#2d6a4f;font-weight:600">Готово! Руслан получил твою заявку и свяжется с тобой в ближайшее время.</p>
+        <p id="consultErr" style="display:none;margin-top:14px;color:#e74c3c">Не удалось отправить. Проверь интернет и попробуй ещё раз.</p>
       </form>
     </div>
 
@@ -113,6 +118,37 @@
   document.body.appendChild(o);
   document.getElementById('pw-in').addEventListener('keydown',function(e){if(e.key==='Enter')chkPw()});
   window.chkPw=function(){var v=document.getElementById('pw-in').value;if(v===P){localStorage.setItem(K,P);o.remove()}else{document.getElementById('pw-err').style.display='block'}};
+})();
+</script>
+
+<!-- Отправка формы консультации через FormSubmit (без бэкенда, письмо на nalsur981@gmail.com) -->
+<script>
+(function(){
+  var f=document.getElementById('consultForm');
+  if(!f)return;
+  f.addEventListener('submit',function(e){
+    e.preventDefault();
+    var btn=document.getElementById('consultBtn');
+    var ok=document.getElementById('consultOk');
+    var err=document.getElementById('consultErr');
+    var label=btn.textContent;
+    err.style.display='none';
+    btn.disabled=true; btn.textContent='Отправляю…';
+    fetch('https://formsubmit.co/ajax/nalsur981@gmail.com',{
+      method:'POST',
+      headers:{'Accept':'application/json'},
+      body:new FormData(f)
+    })
+    .then(function(r){return r.json();})
+    .then(function(){
+      f.querySelectorAll('label,button').forEach(function(el){el.style.display='none';});
+      ok.style.display='block';
+    })
+    .catch(function(){
+      err.style.display='block';
+      btn.disabled=false; btn.textContent=label;
+    });
+  });
 })();
 </script>
 </body>
